@@ -135,6 +135,11 @@ function appendComment(index, comment, archived, $element) {
 
 function makeDisplay(submission) {
     var redditComments = submission.comments;
+    if (submission.relevant_comments) {
+        redditComments = redditComments.map(comment => {
+            comment['is_relevant_thredd'] = submission.relevant_comments.indexOf(comment.id) != -1;
+        })
+    }
     var archived = submission.archived;
     var submission_id = submission.id;
     const submissionModel = new ContentModel(submission);

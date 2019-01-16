@@ -276,9 +276,9 @@ function backgroundSnoowrap() {
         getSubmission: function(id, callback) {
             getSnoowrapRequester()
             .then(r => r.getSubmission(id).fetch())
-            .then(submission => {
-                SubmissionLscache.update([submission])
-                callback(submission);
+            .then(submission => SubmissionLscache.update([submission]))
+            .then(submissions => {
+                callback(submissions[0])
             });
         },
 
@@ -435,7 +435,7 @@ function backgroundSnoowrap() {
             }
             const comment_api = 'https://api.pushshift.io/reddit/search/comment/?';
             const submission_api = 'https://api.pushshift.io/reddit/search/submission/?';
-            const fields = ['link_id', 'body'];
+            const fields = ['id', 'link_id', 'body'];
             let promises = [];
 
             function escapeRegExp(string) {
@@ -459,7 +459,6 @@ function backgroundSnoowrap() {
                             });
                         }
                     })
-                    .then(data => data.map(elem => elem.link_id))  // array of submission IDs
                     .catch(error => {
                         console.log(error);
                         return [];
@@ -469,17 +468,34 @@ function backgroundSnoowrap() {
 
             return Promise.all(promises)
             .then(values => [].concat.apply([], values))
-            .then(ids => {
-                if (ids.length == 0) {
+            .then(data => {
+                let ids_map = {};
+                data.map(elem => {
+                    const submission_id = elem.link_id.split('_')[1];
+                    if (ids_map.hasOwnProperty(submission_id)) {
+                        ids_map[submission_id].push(elem.id);
+                    } else {
+                        ids_map[submission_id] = [elem.id];
+                    }
+                });
+                return ids_map;  // {submission_id: [array of comment ids]}
+            })
+            .then(ids_map => {
+                if (Object.keys(ids_map).length == 0) {
                     throw new Error('aborting pushshift api call');
                     return [];
                 } else {
                     // TODO: pushshift submission_api is not as up-to-date as Reddit's
-                    return fetch(submission_api + 'ids=' + ids.toString());
+                    return fetch(submission_api + 'ids=' + Object.keys(ids_map).toString())
+                        .then(response => response.json())
+                        .then(resp => resp.data)
+                        .then(listing => listing.map(el => {
+                            el['relevant_comments'] = ids_map[el.id];
+                            el['api_source'] = 'pushshift_reddt';
+                            return el;
+                        }));
                 }
             })
-            .then(response => response.json())
-            .then(resp => resp.data)
             .then(listing => {
                 let listing_filtered = listing;
                 // Filter out NSFW results

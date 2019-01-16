@@ -31,7 +31,8 @@ class SubmissionExpand extends Content {
             }));
         }
         buttons.push(React.createElement(OpenInRedditButton, {
-            content_id: this.props.id
+            permalink: this.props.permalink,
+            comment_id: (this.props.relevant_comments || [])[0]
         }))
         let button_container = React.createElement('div', {
             className: '_1hwEKkB_38tIoal6fcdrt9'

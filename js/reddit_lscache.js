@@ -62,16 +62,21 @@ const SubmissionLscache = {
         lscache.remove(SUBMISSION_STORAGE_KEY + id);
     },
     update: function(submissions) {
+        let new_submissions = [];
         submissions.forEach(function(submission) {
+            const old_submission = lscache.get(SUBMISSION_STORAGE_KEY + submission.id) || {};
+            const new_submission = Object.assign(old_submission, submission);
             lscache.set(
                 SUBMISSION_STORAGE_KEY + submission.id,
-                submission,
+                new_submission,
                 this.EXPIRATION_TIME
             );
+            new_submissions.push(new_submission);
         });
         $(document).trigger('submission-update', {
-            submissions: submissions
+            submissions: new_submissions
         });
+        return new_submissions;
     },
     updateComment: function(submission, comment_id, newdata) {
         const id_ = comment_id.includes('_') ? comment_id.split('_')[1] : comment_id;

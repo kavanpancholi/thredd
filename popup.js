@@ -79,7 +79,8 @@ function buildCommentUrl(permalink) {
     var query = {
         'id': permalink.id,
         'num_comments': permalink.num_comments,
-        'title': cropTitle(permalink.title)
+        'title': cropTitle(permalink.title),
+        'relevant_comments': permalink.relevant_comments
     }
     return uri.search(query);
 }
