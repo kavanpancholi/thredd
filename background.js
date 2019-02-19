@@ -98,6 +98,7 @@ function getURLInfo(tab, override_url){
         })
         .then(function(listing) {
             updateBadge(listing.length, tab);
+            showNotification(listing.length, tab);
             SubmissionLscache.insert(listing, url);
             return listing;
         });
@@ -136,6 +137,17 @@ function setBadge(title, text, badgeColor, tab) {
     })
 }
 
+function showNotification(num_results, tab) {
+    if (num_results > 0) {
+        chrome.notifications.create('thredd_results', {
+            type: 'basic',
+            iconUrl: 'images/thredd128.png',
+            title: `Thredd found ${num_results} results!`,
+            message: `for ${tab.url}`
+         }, function(notificationId) {});
+    }
+}
+
 function backgroundSnoowrap() {
     'use strict';
     var clientId = CLIENT_ID_DEV;
@@ -148,6 +160,11 @@ function backgroundSnoowrap() {
     lscache.set('anonymous_requester_json', null);
     let anonymous_requester;
     let snoowrap_requester;
+    const snoowrap_config = {
+        proxies: false,
+        requestDelay: 1000,
+        debug: true
+    };
 
     function fetchAnonymousToken() {
         const form = new FormData();
@@ -163,10 +180,10 @@ function backgroundSnoowrap() {
           .then(tokenInfo => tokenInfo.access_token)
           .then(anonymousToken => {
               const anonymousSnoowrap = new snoowrap({ accessToken: anonymousToken });
-              anonymousSnoowrap.config({ proxies: false, requestDelay: 1000 });
+              anonymousSnoowrap.config(snoowrap_config);
               anonymous_requester = anonymousSnoowrap;
               // anonymous_requester must be refreshed after 1 hour
-              lscache.set('anonymous_requester_json', anonymousSnoowrap, 59);
+              lscache.set('anonymous_requester_json', anonymousSnoowrap);
               return anonymous_requester;
           });
     }
@@ -239,6 +256,7 @@ function backgroundSnoowrap() {
                     redirectUri: redirectUri
                 }).then(r => {
                     lscache.set('is_logged_in_reddit', true, 59);
+                    r.config(snoowrap_config);
                     r.getMe().then(u => lscache.set('reddit_username', u.name));
                     snoowrap_requester = r;
                     logoutContextMenu(first_run=false);
@@ -457,7 +475,15 @@ function backgroundSnoowrap() {
             urls.forEach(u => {
                 promises.push(
                     fetch(comment_api + 'q="' + URI.encode(u) + '"&fields=' + fields.join(','))
-                    .then(response => response.json())
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error(`Pushshift comment status code 
+                                ${response.status.toString()}: ${response.statusText}
+                            `);
+                        }
+                    })
                     .then(resp => resp.data)
                     .then(data => {
                         if (is_youtube) {
@@ -490,7 +516,15 @@ function backgroundSnoowrap() {
                     return fetch(submission_api + 'ids=' + ids.toString());
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error(`Pushshift submission status code 
+                        ${response.status.toString()}: ${response.statusText}
+                    `);
+                }
+            })
             .then(resp => resp.data)
             .then(listing => {
                 let listing_filtered = listing;
@@ -674,9 +708,5 @@ chrome.runtime.onInstalled.addListener(function(details) {
         if (chrome.runtime.setUninstallURL) {
             chrome.runtime.setUninstallURL(uninstallGoogleFormLink);
         }
-    }
-    if (details.reason == 'update') {
-        let update_window = window.open('http://thredd.io/changelog/', '_blank');
-        update_window.opener = null;
     }
 });

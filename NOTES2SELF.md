@@ -1,14 +1,27 @@
 # Notes to Self
 ## TODO
-### Before release
 1. User testing
 1. Code Cleanup
     - bogus user agents, state, large blocks of HTML
-    - extra libraries that aren't necessary
     - Bugfix:
+        - CORS
+            - CORS IS NOT AN ACTUAL ERROR
+                - https://medium.com/@baphemot/understanding-cors-18ad6b478e2b
+            - for example, pushshift gave a CORS "error" but the actual error was status code 429 - too many requests (I had tried to load 30-40 tabs in under a minute)
+                - look under Networks tab in Developer console
+                - pushshift rate limit is 180 requests/min (https://api.pushshift.io/meta)
+                - reddit is 60/min (https://not-an-aardvark.github.io/snoowrap/snoowrap.html#config__anchor)
+            - snoowrap config can retry after rate limit error
+            - pushshift probably doesn't
+            - Snoowrap can give a CORS error if the anonymous requester expired
+                - need to check if this is what's actually happening
+                    - REINTRODUCE OLD BUG & WAIT ONE HOUR WITHOUT RELOADING BACKGROUND.JS
+                - how likely is this to happen?
+            - HTTP Status Codes lookup table: https://www.restapitutorial.com/httpstatuscodes.html
         - when posts/comments link to subreddits/users, the href does not go where you would expect
-### After release
-1. Performance improvements
+1. Thredd notifications
+    - include options to mute or never show again
+        - or option to open up Options page
 1. IndexedDB to bypass 5MB LocalStorage limit
     - would need to implement expiring old data
         - probably as part of `changeAction`
@@ -35,12 +48,6 @@
     - etc.
 1. could right-clicking Open In New Tab somehow keep popup window open?
     - or make the extension an overlay so it doesn't keep closing
-1. Consistent UI for post.html
-    - after posting, go to `comment.html` if it was successful
-1. Search multiple variations of the URL and stop when results are found
-    1. URL with ? params
-    1. URL with # segment
-    1. URL w/o ? or #
 
 Where to get outside help?
     - ideally trustworthy
