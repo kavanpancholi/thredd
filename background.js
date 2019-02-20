@@ -143,7 +143,7 @@ function showNotification(num_results, tab) {
             type: 'basic',
             iconUrl: 'images/thredd128.png',
             title: `Thredd found ${num_results} results!`,
-            message: `for ${tab.url}`
+            message: `for ${trimURL(tab.url)}`
          }, function(notificationId) {});
     }
 }
@@ -162,8 +162,7 @@ function backgroundSnoowrap() {
     let snoowrap_requester;
     const snoowrap_config = {
         proxies: false,
-        requestDelay: 1000,
-        debug: true
+        requestDelay: 1000
     };
 
     function fetchAnonymousToken() {
