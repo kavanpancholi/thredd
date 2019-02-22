@@ -1,66 +1,11 @@
 <html>
 <head>
-<style>
-body {
-  min-width:400px;
-  overflow-x:hidden;
-  font-family: 'Shanti', arial, serif;
-  font-size: 16px;
-}
-#loading {
-    padding-left: 20px;
-}
-#title {
-    font-weight: 700;
-    font-size: large;
-    border-bottom: 1px solid #e0e0dc;
-    color: #344152;
-}
-#main {
-    width: 600px;
-    margin: 0px auto;
-}
-#desc {
-    margin-top: 20px;
-}
-#blacklist {
-    margin: 20px;
-}
-#inputarea {
-    margin: 20px;
-}
-#emptynotice {
-    margin: 20px;
-    display: none;
-}
-
-#blacklistdiv {
-    color: #CC1100;
-}
-
-#statusarea {
-    background-color: rgb(227,227,227);
-    color: green;
-    padding: 4px;
-}
-
-.blockurl {
-    display: block;
-    height: 20px;
-    line-height: 20px;
-    margin: 2px;
-    padding: 2px;
-    width: 500px;
-    background-color: rgb(227,227,227);
-}
-.delete {
-    float: right;
-}
-</style>
-<script src="jquery.min.js"></script>
-<title>Thredd Options</title></head>
+<link rel="stylesheet" type="text/css" href="/style.css">
+<script src="/jquery.min.js"></script>
+<title>Thredd Privacy Options</title></head>
 <body>
 <div id="main">
+    <a href="/options/options.html">Back</a>
     <h1>Thredd Privacy Options</h1>
     <p>Edit the <strong>Website Blacklist</strong> to indicate sites where Thredd should not run.</p>
     <p>Alternatively, you can check the box to <strong>Only run on click</strong> for the most control over your privacy.
@@ -95,5 +40,5 @@ body {
         <strong>*WARNING*:</strong> Thredd cannot notify you of results found if this box is checked!
     </div>
 </div>
-<script src="options.js"></script>
+<script src="/options/privacy_options.js"></script>
 </html>

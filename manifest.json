@@ -10,7 +10,7 @@
        "default_title": "Thredd"
     },
     "description": "Connect to people who share your interests simply by browsing the web!",
-    "options_page": "options.html",
+    "options_page": "options/options.html",
     "icons": {
        "19": "images/thredd19.png",
        "32": "images/thredd32.png",
@@ -23,9 +23,10 @@
     "permissions": [
         "identity",
         "contextMenus",
+        "notifications",
         "tabs",
         "http://www.reddit.com/*",
         "storage"],
     "update_url": "http://clients2.google.com/service/update2/crx",
-    "version": "0.8.121"
+    "version": "0.8.122"
 }

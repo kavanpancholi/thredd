@@ -98,12 +98,34 @@ function getURLInfo(tab, override_url){
         })
         .then(function(listing) {
             updateBadge(listing.length, tab);
+            showNotification(listing.length, tab);
             SubmissionLscache.insert(listing, url);
             return listing;
         });
 
     }
 }
+
+function showNotification(num_results, tab) {
+    if (num_results > 0) {
+        chrome.notifications.create('thredd_results', {
+            type: 'basic',
+            iconUrl: 'images/thredd128.png',
+            title: `Thredd found ${num_results} results!`,
+            message: `for ${trimURL(tab.url)}`,
+            buttons: [{title: 'Change Notification Preferences'}]
+         });
+    }
+}
+
+function notificationPrefClick(notificationId, buttonIndex) {
+    if (notificationId === 'thredd_results' && buttonIndex === 0) {
+        let window_ = window.open('options/notification_options.html', '_blank');
+        window_.opener = null;
+    }
+}
+
+chrome.notifications.onButtonClicked.addListener(notificationPrefClick);
 
 function disableBadge(tab){
     var title = "Not running on this page"
@@ -674,9 +696,5 @@ chrome.runtime.onInstalled.addListener(function(details) {
         if (chrome.runtime.setUninstallURL) {
             chrome.runtime.setUninstallURL(uninstallGoogleFormLink);
         }
-    }
-    if (details.reason == 'update') {
-        let update_window = window.open('http://thredd.io/changelog/', '_blank');
-        update_window.opener = null;
     }
 });
