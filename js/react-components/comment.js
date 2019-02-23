@@ -18,7 +18,7 @@ class CommentButtons extends Content {
                 handleSave: ((e) => this.handleSave(e))
             })
         ]
-        if (lscache.get('is_logged_in_reddit') &&
+        if (this.props.is_logged_in &&
             ((this.props.author.name || this.props.author) === lscache.get('reddit_username'))) {
             buttons.push(React.createElement(RemoveButton, {
                 content_id: this.props.id,

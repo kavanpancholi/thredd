@@ -77,10 +77,13 @@ function renderHeader(redditPosts, encodedUrl) {
 }
 
 function makeDisplay(redditPosts) {
-    ReactDOM.render(
-        React.createElement(PopupResults, {
-            posts: redditPosts
-    }), document.getElementById('links'));
+    isLoggedInReddit(is_logged_in => {
+        redditPosts.map(elem => elem.is_logged_in = is_logged_in);
+        ReactDOM.render(
+            React.createElement(PopupResults, {
+                posts: redditPosts
+        }), document.getElementById('links'));
+    });
 }
 
 function buildCommentUrl(permalink) {

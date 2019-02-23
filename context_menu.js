@@ -23,8 +23,7 @@ function logoutContextMenu(first_run=false) {
             "title": "Sign Out from " + username,
             "contexts": ["browser_action"],
             "onclick": function() {
-                lscache.set('is_logged_in_reddit', null);
-                loginContextMenu(first_run=false);
+                snoo.logOutReddit(status => loginContextMenu(first_run=false));
             }
         };
         if (first_run) {
@@ -41,11 +40,13 @@ function logoutContextMenu(first_run=false) {
     });
 }
 
-if (lscache.get('is_logged_in_reddit')) {
-    logoutContextMenu(first_run=true);
-} else {
-    loginContextMenu(first_run=true);
-}
+snoo.isLoggedInReddit(is_logged_in => {
+    if (is_logged_in) {
+        logoutContextMenu(first_run=true);
+    } else {
+        loginContextMenu(first_run=true);
+    }
+});
 
 const donateMenuId = chrome.contextMenus.create({
     "title": "Donate",

@@ -21,10 +21,28 @@ function getSubreddit(subreddit, callback)  {
     }, callback)
 }
 
+function isAnonymousTokenExpired(callback)  {
+    chrome.runtime.sendMessage({
+        'action' : 'isAnonymousTokenExpired'
+    }, callback)
+}
+
+function isLoggedInReddit(callback)  {
+    chrome.runtime.sendMessage({
+        'action' : 'isLoggedInReddit'
+    }, callback)
+}
+
 function logInReddit(callback) {
     chrome.runtime.sendMessage({
         'action' : 'logInReddit',
         'interactive' : true
+    }, callback)
+}
+
+function logOutReddit(callback) {
+    chrome.runtime.sendMessage({
+        'action' : 'logOutReddit'
     }, callback)
 }
 

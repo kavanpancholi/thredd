@@ -66,7 +66,7 @@ class SubmissionPopup extends Content {
             React.createElement(OpenInRedditButton, {
                 content_id: this.props.id
             }),
-            ((lscache.get('is_logged_in_reddit') &&
+            ((this.props.is_logged_in &&
             ((this.props.author.name || this.props.author) === lscache.get('reddit_username'))) ?
             React.createElement(DropdownMenu, {
             button: React.createElement(

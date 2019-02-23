@@ -1,5 +1,42 @@
 class SubmissionExpand extends Content {
     render() {
+        let menu_contents = [
+            React.createElement('div', {
+                className: 's1fyj3kn-15 UVOUP b1zwxr-0 hxpTao'
+            }, React.createElement(ShareButton, {
+                    url: this.props.url,
+                    replyable_content_type: this.props.replyable_content_type,
+                    menu_style: {left:'auto', right:0}
+            })),
+            React.createElement('div', {
+                className: 's1fyj3kn-15 UVOUP b1zwxr-0 hxpTao'
+            }, React.createElement(SaveButton, {
+                content_id: this.props.id,
+                replyable_content_type: this.props.replyable_content_type,
+                saved: this.state.saved,
+                handleSave: ((e) => this.handleSave(e))
+            })),
+            React.createElement('div', {
+                className: 's1fyj3kn-15 UVOUP b1zwxr-0 hxpTao'
+            }, React.createElement(OpenInRedditButton, {
+                content_id: this.props.id
+            }))
+        ];
+        isLoggedInReddit(is_logged_in => {
+            if (is_logged_in &&
+                ((this.props.author.name || this.props.author) === lscache.get('reddit_username'))) {
+                menu_contents.splice(2, 0,
+                    React.createElement('div', {
+                        className: 's1fyj3kn-15 UVOUP b1zwxr-0 hxpTao'
+                    }, React.createElement(RemoveButton, {
+                        content_id: this.props.id,
+                        replyable_content_type: this.props.replyable_content_type,
+                        removed: this.state.removed,
+                        handleRemove: ((e) => this.handleRemove(e))
+                    }))
+                );
+            }
+        });
         let overflow_menu = React.createElement(DropdownMenu, {
             button: React.createElement(
                 "button",
@@ -7,38 +44,7 @@ class SubmissionExpand extends Content {
                 id: `${this.props.id}-overflow-menu` },
                 React.createElement("i", { "className": "icon icon-menu mpc6lx-2 ebwjqI" })
             ),
-            menu_contents: [
-                React.createElement('div', {
-                    className: 's1fyj3kn-15 UVOUP b1zwxr-0 hxpTao'
-                }, React.createElement(ShareButton, {
-                        url: this.props.url,
-                        replyable_content_type: this.props.replyable_content_type,
-                        menu_style: {left:'auto', right:0}
-                })),
-                React.createElement('div', {
-                    className: 's1fyj3kn-15 UVOUP b1zwxr-0 hxpTao'
-                }, React.createElement(SaveButton, {
-                    content_id: this.props.id,
-                    replyable_content_type: this.props.replyable_content_type,
-                    saved: this.state.saved,
-                    handleSave: ((e) => this.handleSave(e))
-                })),
-                ((lscache.get('is_logged_in_reddit') &&
-                ((this.props.author.name || this.props.author) === lscache.get('reddit_username'))) ?
-                React.createElement('div', {
-                    className: 's1fyj3kn-15 UVOUP b1zwxr-0 hxpTao'
-                }, React.createElement(RemoveButton, {
-                    content_id: this.props.id,
-                    replyable_content_type: this.props.replyable_content_type,
-                    removed: this.state.removed,
-                    handleRemove: ((e) => this.handleRemove(e))
-                })) : null),
-                React.createElement('div', {
-                    className: 's1fyj3kn-15 UVOUP b1zwxr-0 hxpTao'
-                }, React.createElement(OpenInRedditButton, {
-                    content_id: this.props.id
-                }))
-            ],
+            menu_contents: menu_contents,
             menu_style: {left:'auto', right:0}
         });
 

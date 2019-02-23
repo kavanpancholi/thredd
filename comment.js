@@ -47,6 +47,9 @@ function renderCollapsedComment(comment) {
 function renderComment(comment, archived) {
     const commentModel = new ContentModel(comment);
     commentModel.replyable_content_type = 'comment';
+    isLoggedInReddit(is_logged_in => {
+        commentModel.is_logged_in = is_logged_in;
+    });
     let $comment = $(`
     <li id='${comment.id}' class="s136il31-0 cMWqxb" tabindex="-1">
         <div class="fxv3b9-1 jDSCcP">

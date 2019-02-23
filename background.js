@@ -155,11 +155,9 @@ function backgroundSnoowrap() {
     var redirectRe = new RegExp(redirectUri + '[#\?](.*)');
     // TODO: bogus userAgent
     var userAgent = chrome.runtime.id + ':' + 'v0.0.1' + ' (by /u/sirius_li)';
-
-    lscache.set('is_logged_in_reddit', null);
-    lscache.set('anonymous_requester_json', null);
-    let anonymous_requester;
-    let snoowrap_requester;
+    const ONE_HOUR_MS = 1000 * 60 * 60;
+    let anonymous_requester = {};
+    let snoowrap_requester = {};
     const snoowrap_config = {
         proxies: false,
         requestDelay: 1000
@@ -178,12 +176,12 @@ function backgroundSnoowrap() {
           .then(JSON.parse)
           .then(tokenInfo => tokenInfo.access_token)
           .then(anonymousToken => {
+              // anonymous_requester must be refreshed after 1 hour
+              anonymous_requester.expiryTime = new Date().getTime() + ONE_HOUR_MS;
               const anonymousSnoowrap = new snoowrap({ accessToken: anonymousToken });
               anonymousSnoowrap.config(snoowrap_config);
-              anonymous_requester = anonymousSnoowrap;
-              // anonymous_requester must be refreshed after 1 hour
-              lscache.set('anonymous_requester_json', anonymousSnoowrap);
-              return anonymous_requester;
+              anonymous_requester.r = anonymousSnoowrap;
+              return anonymousSnoowrap;
           });
     }
 
@@ -191,12 +189,12 @@ function backgroundSnoowrap() {
         // return whatever snoowrap requester is available
         // create a new anonymous requester if needed
         return new Promise(function(resolve, reject) {
-            if (lscache.get('is_logged_in_reddit')) {
+            if (isLoggedInReddit()) {
                 console.log('using logged in requester');
-                resolve(snoowrap_requester);
-            } else if (lscache.get('anonymous_requester_json')) {
+                resolve(snoowrap_requester.r);
+            } else if (isAnonymousTokenExpired()) {
                 console.log('using anonymous requester');
-                resolve(anonymous_requester);
+                resolve(anonymous_requester.r);
             } else {
                 console.log('anonymous requester expired. Fetching new one...');
                 resolve(fetchAnonymousToken());
@@ -204,11 +202,29 @@ function backgroundSnoowrap() {
         })
     }
 
+    function isLoggedInReddit(callback) {
+        const is_logged_in = snoowrap_requester.expiryTime &&
+            new Date().getTime() < snoowrap_requester.expiryTime;
+        if (callback) {
+            return callback(is_logged_in);
+        }
+        return is_logged_in;
+    }
+
+    function isAnonymousTokenExpired(callback) {
+        const is_not_expired = anonymous_requester.expiryTime &&
+            new Date().getTime() < anonymous_requester.expiryTime;
+        if (callback) {
+            return callback(is_not_expired);
+        }
+        return is_not_expired;
+    }
+
     return {
 
         logInReddit: function(interactive, callback) {
             // In case we already have a snoowrap requester cached, simply return it.
-            if (lscache.get('is_logged_in_reddit')) {
+            if (isLoggedInReddit()) {
                 callback('Success');
                 return;
             }
@@ -254,14 +270,15 @@ function backgroundSnoowrap() {
                     clientId: clientId,
                     redirectUri: redirectUri
                 }).then(r => {
-                    lscache.set('is_logged_in_reddit', true, 59);
+                    // snoowrap_requester must be refreshed after 1 hour
+                    snoowrap_requester.expiryTime = new Date().getTime() + ONE_HOUR_MS;
                     r.config(snoowrap_config);
                     r.getMe().then(u => lscache.set('reddit_username', u.name));
-                    snoowrap_requester = r;
+                    snoowrap_requester.r = r;
                     logoutContextMenu(first_run=false);
                     return 'Success'
                 }).catch(err => {
-                    lscache.set('is_logged_in_reddit', null);
+                    snoowrap_requester = {};
                     console.error(err);
                     loginContextMenu(first_run=false);
                     return err.toString();
@@ -274,12 +291,22 @@ function backgroundSnoowrap() {
             }
         },
 
+        logOutReddit: function(callback) {
+            snoowrap_requester = {};
+            if (callback) {
+                callback('Success');
+            }
+        },
+
         submitPost: function(subreddit, title, url, callback) {
-            snoowrap_requester.submitLink({
-                subredditName: subreddit,
-                title: title,
-                url: url
-            }).fetch()
+            getSnoowrapRequester()
+            .then(r => {
+                r.submitLink({
+                    subredditName: subreddit,
+                    title: title,
+                    url: url
+                }).fetch()
+            })
             .then(function(submission) {
                 // add submission to lscache
                 chrome.tabs.query({
@@ -301,7 +328,8 @@ function backgroundSnoowrap() {
 
         getCurrentUserName: function(callback) {
             try {
-                snoowrap_requester.getMe()
+                getSnoowrapRequester()
+                .then(r => r.getMe())
                 .then(u => callback(u.name));
             } catch(err) {
                 callback(err.toString());
@@ -309,9 +337,13 @@ function backgroundSnoowrap() {
         },
 
         searchSubreddits: function(query, callback) {
-            snoowrap_requester.searchSubreddits({
+            getSnoowrapRequester()
+            .then(r => {
+                r.searchSubreddits({
                 'query': query
-            }).then(subreddits => callback(subreddits));
+                })
+            })
+            .then(subreddits => callback(subreddits));
         },
 
         getSubmission: function(id, callback) {
@@ -324,16 +356,16 @@ function backgroundSnoowrap() {
         },
 
         getSubreddit: function(subreddit, callback) {
-            anonymous_requester.getSubreddit(subreddit)
-            .fetch()
+            getSnoowrapRequester()
+            .then(r => r.getSubreddit(subreddit).fetch())
             .then(fetched => callback(fetched))
             .catch(err => console.error(err));
         },
 
         leaveComment: function(id, text, replyable_content_type, callback) {
             if (replyable_content_type == 'submission') {
-                snoowrap_requester.getSubmission(id)
-                .reply(text)
+                getSnoowrapRequester()
+                .then(r => r.getSubmission(id).reply(text))
                 .then(comment => {
                     // inject comment into submission object
                     let submission = lscache.get(SUBMISSION_STORAGE_KEY + id);
@@ -346,8 +378,8 @@ function backgroundSnoowrap() {
                     callback(err.toString());
                 });
             } else if (replyable_content_type == 'comment') {
-                snoowrap_requester.getComment(id)
-                .reply(text)
+                getSnoowrapRequester()
+                .then(r => r.getComment(id).reply(text))
                 .then(comment => {
                     // inject comment into submission object
                     const submission_id = comment.link_id.split('_')[1];
@@ -644,7 +676,11 @@ function backgroundSnoowrap() {
 
         fetchAnonymousToken: fetchAnonymousToken,
 
-        getSnoowrapRequester: getSnoowrapRequester
+        getSnoowrapRequester: getSnoowrapRequester,
+
+        isLoggedInReddit: isLoggedInReddit,
+
+        isAnonymousTokenExpired: isAnonymousTokenExpired
     }
 }
 
@@ -656,8 +692,17 @@ function onRequest(request, sender, callback) {
     if (request.action == 'getSubreddit') {
         snoo.getSubreddit(request.subreddit, callback);
         return true;
+    } else if (request.action == 'isAnonymousTokenExpired') {
+        snoo.isAnonymousTokenExpired(callback);
+        return true;
+    } else if (request.action == 'isLoggedInReddit') {
+        snoo.isLoggedInReddit(callback);
+        return true;
     } else if (request.action == 'logInReddit') {
         snoo.logInReddit(request.interactive, callback);
+        return true;
+    } else if (request.action == 'logOutReddit') {
+        snoo.logOutReddit(callback);
         return true;
     } else if (request.action == 'submitPost') {
         snoo.submitPost(request.subreddit, request.title, request.url, callback);
