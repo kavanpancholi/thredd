@@ -9,6 +9,10 @@
        "default_popup": "popup.html",
        "default_title": "Thredd"
     },
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "thredd.dev@example.com"
+    }},
     "description": "Get reviews for the page you're reading or recommendations for similar content - crowdsourced from Reddit!",
     "options_page": "options.html",
     "icons": {

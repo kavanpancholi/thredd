@@ -10,10 +10,12 @@ chrome.tabs.onUpdated.addListener(function(tabId, change, tab) {
 });
 
 // update on selection change
-chrome.tabs.onSelectionChanged.addListener(function(tabId, info) {
-    console.log('onSelectionChanged: ' + tabId)
-    chrome.tabs.getSelected(null, function(tab){
-        changeAction(tab)
+chrome.tabs.onActivated.addListener(function(activeInfo) {
+    chrome.tabs.query({
+        active: true,
+        currentWindow: true
+    }, function(tabs) {
+        changeAction(tabs[0]);
     });
 });
 

@@ -93,7 +93,11 @@ function buildCommentUrl(permalink) {
 }
 
 chrome.runtime.getBackgroundPage(function (global) {
-    chrome.tabs.getSelected(null, function(tab){
+    chrome.tabs.query({
+        active: true,
+        currentWindow: true
+    }, function(tabs) {
+        let tab = tabs[0];
         isBlacklisted(tab,
             function(input) {
                 $("div#blacklisted").show(0)
