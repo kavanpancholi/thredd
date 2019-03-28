@@ -128,7 +128,7 @@ function updateBadge(numPosts, tab) {
     setBadge(title, text, badgeColor, tab)
 }
 
-function setBadge(title, text, badgeColor, tab) {
+function setBadge(title, text, badgeColor, tab, rotate = false) {
     var tabId = tab.id
     chrome.browserAction.setTitle({"title": title, "tabId": tabId})
     !badgeColor || chrome.browserAction.setBadgeBackgroundColor({
@@ -139,6 +139,43 @@ function setBadge(title, text, badgeColor, tab) {
         "text": text,
         "tabId": tabId
     })
+    if (true) {
+        const start = 1000;
+        const lines = 50;
+        const cW = 19;
+        const cH = 19;
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext('2d');
+        const rotateIcon = setInterval(function() {
+            var rotation = parseInt(((new Date() - start) / 1000) * lines) / lines;
+            context.save();
+            context.clearRect(0, 0, cW, cH);
+            context.translate(cW / 2, cH / 2);
+            context.rotate(Math.PI * 2 * rotation);
+            for (var i = 0; i < lines; i++) {
+              context.beginPath();
+              context.rotate(Math.PI * 2 / lines);
+              context.moveTo(cW / 10, 0);
+              context.lineTo(cW / 4, 0);
+              context.lineWidth = cW / 30;
+              context.strokeStyle = 'rgba(0, 0, 0,' + i / lines + ')';
+              context.stroke();
+            }
+
+          var imageData = context.getImageData(10, 10, 19, 19);
+            chrome.browserAction.setIcon({
+              imageData: imageData
+            });
+
+          context.restore();
+          }, 1000 / 30);
+          setTimeout(function() {
+              clearInterval(rotateIcon);
+              chrome.browserAction.setIcon({
+                  path: 'images/thredd19.png'
+              })
+          }, 3000);
+    }
 }
 
 function backgroundSnoowrap() {
